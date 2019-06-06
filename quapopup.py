@@ -10,7 +10,7 @@ headers = {'X-Auth-Token':credential,'Content-Type':'application/json'}
 sensorid = sys.argv[1]
 
 
-def ssession():
+def startsession():
     url = "https://api-prod05.conferdeploy.net/integrationServices/v3/cblr/session/%s" % sensorid
     params = {"sensor_id":int(sensorid)}
     global sessionid
@@ -81,7 +81,7 @@ def popupmsg():
         sys.exit(1)
 
 
-ssession()
+startsession()
 popupmsg()
 
 
