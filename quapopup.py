@@ -10,7 +10,7 @@ headers = {'X-Auth-Token':credential,'Content-Type':'application/json'}
 sensorid = sys.argv[1]
 
 
-def startsession():
+def ssession():
     url = "https://api-prod05.conferdeploy.net/integrationServices/v3/cblr/session/%s" % sensorid
     params = {"sensor_id":int(sensorid)}
     global sessionid
@@ -28,13 +28,28 @@ def startsession():
             req2 = s.get("https://api-prod05.conferdeploy.net/integrationServices/v3/cblr/session/%s" % sessionid,headers=headers)
             if req2.json()["status"] != "PENDING":
                 print "session established"
+                print json.dumps(req2.json(), indent=4, separators=(',', ': '))
+                checkOS(req2.json())
                 break
             else:
                 print json.dumps(req2.json(), indent=4, separators=(',', ': '))
                 continue
     else:
         print "session established"
+        checkOS(req.json())
         pass
+
+
+def checkOS(kwd):
+    global os
+    if "Windows" in kwd["current_working_directory"]:
+        os = "Win"
+    elif "MacOS" in kwd["current_working_directory"]:
+        os = "Mac"
+    else:
+        print "might be Linux... Bye"
+        closesession()
+        sys.exit(1)
 
 
 def closesession():
@@ -46,7 +61,11 @@ def closesession():
 
 
 def popupmsg():
-    msg = "msg * '\xe9\x9a\x94\xe9\x9b\xa2\xe3\x81\x95\xe3\x82\x8c\xe3\x81\xbe\xe3\x81\x97\xe3\x81\x9f'"
+    if os == "Win":
+        msg = "msg * '\xe9\x9a\x94\xe9\x9b\xa2\xe3\x81\x95\xe3\x82\x8c\xe3\x81\xbe\xe3\x81\x97\xe3\x81\x9f'"
+    elif os == "Mac":
+        msg = "osascript -e 'tell app \"System Events\" to display dialog \"\xe9\x9a\x94\xe9\x9b\xa2\xe3\x81\x95\xe3\x82\x8c\xe3\x81\xbe\xe3\x81\x97\xe3\x81\x9f\"'"
+    #msg = "osascript -e 'display notification \"hogehoge\" with title \"Fuga\"'"
     params = json.dumps({"session_id":"%s" % sessionid,"name":"create process", "object": msg})
     url = "https://api-prod05.conferdeploy.net/integrationServices/v3/cblr/session/%s/command" % sessionid
     req = s.post(url,headers=headers,data=params)
@@ -61,6 +80,7 @@ def popupmsg():
                 req3 = s.get(url2,headers=headers)
                 print json.dumps(req3.json(), indent=4, separators=(',', ': '))
                 if req3.json()["status"] == "complete":
+                    time.sleep(1)
                     print "finish"
                     closesession()
                     sys.exit(1)
@@ -72,6 +92,7 @@ def popupmsg():
                     pass
                                         
         else:
+            time.sleep(1)
             print finish
             closesession()
             sys.exit(1)
@@ -80,8 +101,8 @@ def popupmsg():
         closesession()
         sys.exit(1)
 
-
-startsession()
-popupmsg()
+if __name__ == "__main__":
+    ssession()
+    popupmsg()
 
 
